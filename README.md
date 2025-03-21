@@ -1,8 +1,9 @@
-<!-- # sandwich-bib
-<img src="./images/sandwich-bib.jpg" width="30%"> -->
-
-| <div align="left"><strong><span style="font-size: 24px;">sandwich-bib</span></strong></div> | ![sandwich-bib](./images/sandwich-bib.jpg) |
-|--------------------------------------------------------------|------------------------------|
+<table style="width: 100%">
+  <tr>
+    <td style="width: 30%;"><img src="./images/sandwich-bib.jpg" alt="Image" width="100%"></td>
+    <td style="width: 70%;"><h1>sandwich-thesis</h1></td>
+  </tr>
+</table>
 
 
 Are you in the following situation?
