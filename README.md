@@ -1,9 +1,6 @@
-<table style="width: 100%">
-  <tr>
-    <td style="width: 30%;"><img src="./images/sandwich-bib.jpg" alt="Image" width="100%"></td>
-    <td style="width: 70%;"><h1>sandwich-thesis</h1></td>
-  </tr>
-</table>
+<img src="./images/sandwich-bib.jpg" alt="sandwich-bib" width="200"/>
+
+# sandwich-bib
 
 
 Are you in the following situation?
