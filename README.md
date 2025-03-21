@@ -1,5 +1,9 @@
-# sandwich-bib
-<img src="./images/sandwich-bib.jpg" width="30%" style="float: left; margin-right: 10px;">
+<!-- # sandwich-bib
+<img src="./images/sandwich-bib.jpg" width="30%"> -->
+
+| <div align="left"><strong><span style="font-size: 24px;">sandwich-bib</span></strong></div> | ![sandwich-bib](./images/sandwich-bib.jpg) |
+|--------------------------------------------------------------|------------------------------|
+
 
 Are you in the following situation?
 
