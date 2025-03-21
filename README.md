@@ -1,16 +1,13 @@
-<div style="display: flex; align-items: center;">
-    <div style="flex: 1; font-size: 3em; font-weight: bold;">
-        sandwich-bib
-    </div>
-    <img src="./images/sandwich-bib.jpg" width="30%" style="margin-left: 10px;">
-</div>
-<hr>
+# sandwich-bib
+<img src="./images/sandwich-bib.jpg" width="30%" style="float: left; margin-right: 10px;">
 
 Are you in the following situation?
 
 *You're a PhD student about to graduate. You published multiple papers and they all need to go in your thesis. You wrote the papers in LaTeX/Overleaf, at different times, using different .bib files. There are definitely references in common between your papers, but the bibkeys in your .bib files are not consistent. **You want to minimize the manual effort in unifying your sandwich thesis bibliography**.*
 
-I was in this situation too. In this repository, I'm recording the steps I took to automate the process of unifying multiple bibliographies from multiple papers into a single bibliography for a sandwich thesis. The solution I found is not perfectly automated, but better than the 100% manual alternative. Below is an outline of my 5-step process:
+I was in this situation too. In this repository, I'm recording the steps I took to automate the process of unifying multiple bibliographies from multiple papers into a single bibliography for a sandwich thesis. The solution I found is not perfectly automated, but better than the 100% manual alternative. Below is an outline of my 5-step process.
+
+<hr>
 
 ## 0. Assumed starting point
 
@@ -64,7 +61,7 @@ On the commandline, use ``bib-tool`` to merge the .bib files. The following comm
 bib-merges >> bibtool -s -d chapter2.bib chapter3.bib chapter4.bib chapter5.bib -o merged2345.bib
 ```
 
-*What gets counted as a duplicate bib item?* Itmes here are counted as duplicates based on their **bibkey** (the first thing in the .bib item entry). Below is an example of a duplicate and what happens to it. The bibkey in this example is ``jvm1995-correction``:
+*What gets counted as a duplicate bib item?* Items here are counted as duplicates based on their **bibkey** (the first thing in the .bib item entry). Below is an example of a duplicate and what happens to it. The bibkey in this example is ``jvm1995-correction``:
 
 ```
 @Article{	  jvm1995-correction,
@@ -100,7 +97,9 @@ bib-merges >> bibtool -s -d chapter2.bib chapter3.bib chapter4.bib chapter5.bib 
 }
 ```
 
-Importantly, this means that differing bibkeys referring to the *same paper* will be retained in the ``merged2345.bib`` file. Here's an example of that:
+You can see the second one is commented-out. 
+
+An important consequence of counting duplicates based on their **bibkey** is that differing bibkeys referring to the *same paper* will be retained in the ``merged2345.bib`` file. Here's an example of that:
 
 ```
 @Article{	  beck2019,
@@ -148,11 +147,11 @@ Importantly, this means that differing bibkeys referring to the *same paper* wil
 }
 ```
 
-Even though these two bib items are for the same paper (Beck & Bary 2019), the ``merged2345.bib`` file retains both.
+The second one is not commented-out, even though these two bib items are for the same paper (Beck & Bary 2019). The ``merged2345.bib`` file retains both.
 
 ## 3. Make a merged .bbl file 
 
-The next part is really the trick. We leverage the compiled **.bbl** (not .bib!) file to do some of the work for us.
+The next part is really the trick. We leverage the compiled **.bbl** (not the same as .bib) file to do some of the work for us.
 
 ### i. Compile the Overleaf thesis project with the merged .bib file
 
