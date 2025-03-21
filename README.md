@@ -1,36 +1,70 @@
-# Dealing with references when writing a sandwich thesis
+<div style="display: flex; align-items: center;">
+    <div style="flex: 1; font-size: 3em; font-weight: bold;">
+        sandwich-bib
+    </div>
+    <img src="./images/sandwich-bib.jpg" width="30%" style="margin-left: 10px;">
+</div>
+<hr>
 
-You published multiple papers. They all need to go in the thesis. You wrote them at different times using different .bib files. There are definitely references in common between the papers, but the bibkeys are not consistent. You want to minimize the manual effort in unifying your sandwich thesis bibliography. Here's the steps I took to do this:
+Are you in the following situation?
 
-## 1. Collect the .bib files
+*You're a PhD student about to graduate. You published multiple papers and they all need to go in your thesis. You wrote the papers in LaTeX/Overleaf, at different times, using different .bib files. There are definitely references in common between your papers, but the bibkeys in your .bib files are not consistent. **You want to minimize the manual effort in unifying your sandwich thesis bibliography**.*
 
-Return to the Overleaf project of each individual paper. Download the .bib file. Store them in a working directory and name them as follows: 
+I was in this situation too. In this repository, I'm recording the steps I took to automate the process of unifying multiple bibliographies from multiple papers into a single bibliography for a sandwich thesis. The solution I found is not perfectly automated, but better than the 100% manual alternative. Below is an outline of my 5-step process:
+
+## 0. Assumed starting point
+
+The rest of this README assumes:
+
+* You're working in Overleaf.
+* You've created a single Overleaf project for the sandwich thesis.
+* Chapter 1 of your sandwich thesis is an Introduction (not one of the published papers).
+* Chapter 2, 3, 4 and 5 of your sandwich thesis contain your published papers, copy-and-pasted in their original form (with the original bibkeys in the ``\cite{}`` commands) into the sandwich thesis .tex file(s).
+* You have an empty .bib file in your sandwich thesis Overleaf project. Upon compiling the sandwich thesis in Overleaf, you have N error or warning log messages saying "Warning: Citation `bibkey' on page 6 undefined", where N is the number of citations in Chapter 2, 3, 4 and 5 combined.
+
+Once you're at that stage, create a local working directory and fill it with the python scripts in this repository:
 
 ```bash
-bib-merges >> ls .
-chapter2.bib
-chapter3.bib
-chapter3.bib
-chapter3.bib
+sandwich-bib >> ls .
+parse_bbl.py
+replace_bibkeys.py
 ```
 
-## 2. Merge the .bib files 
+Then read on.
 
-Install [``bib-tool``](https://formulae.brew.sh/formula/bib-tool) (see also [https://www.gerd-neugebauer.de/software/TeX/BibTool/en/](https://www.gerd-neugebauer.de/software/TeX/BibTool/en/)). 
+## 1. Collect the papers' .bib files
+
+Collect all the original .bib files from your papers. This might mean going back to the Overleaf project where you wrote each individual paper. The important part is that these .bib files contain the original bibkey used in the paper (now chapter) text. 
+
+Download a local copy of each .bib file. Store the .bib files in a working directory and name them as follows: 
+
+```bash
+sandwich-bib >> ls .
+chapter2.bib
+chapter3.bib
+chapter4.bib
+chapter5.bib
+parse_bbl.py
+replace_bibkeys.py
+```
+
+## 2. Create a merged .bib file 
+
+Next we merge the ``chapter2.bib``, ``chapter3.bib``, ``chapter4.bib`` and ``chapter5.bib`` files into a single .bib file, which we call ``merged2345.bib``.
+
+To do this, install [``bib-tool``](https://formulae.brew.sh/formula/bib-tool) (see also [https://www.gerd-neugebauer.de/software/TeX/BibTool/en/](https://www.gerd-neugebauer.de/software/TeX/BibTool/en/)). 
 
 ```bash
 brew install bib-tool
 ```
 
-Use it to merge the .bib files. This command merges, sorts, and comments-out duplicates:
+On the commandline, use ``bib-tool`` to merge the .bib files. The following command merges, sorts, and comments-out duplicate bib items:
 
 ```bash
 bib-merges >> bibtool -s -d chapter2.bib chapter3.bib chapter4.bib chapter5.bib -o merged2345.bib
 ```
 
-What we want out of this step is the file ``merged2345.bib``. Since Chapter 1 is the Introduction, the four papers in this example comprise Chapter 2, 3, 4 and 5 (hence the merged .bib file name).
-
-*What gets counted as a duplicate?* Entries here are counted as duplicates based on their bibkey (the first thing in the .bib item entry). Here's an example of a duplicate and what happens to it; the bibkey is ``jvm1995-correction``:
+*What gets counted as a duplicate bib item?* Itmes here are counted as duplicates based on their **bibkey** (the first thing in the .bib item entry). Below is an example of a duplicate and what happens to it. The bibkey in this example is ``jvm1995-correction``:
 
 ```
 @Article{	  jvm1995-correction,
@@ -114,27 +148,33 @@ Importantly, this means that differing bibkeys referring to the *same paper* wil
 }
 ```
 
+Even though these two bib items are for the same paper (Beck & Bary 2019), the ``merged2345.bib`` file retains both.
+
 ## 3. Make a merged .bbl file 
 
-The next part is really the trick. We leverage the compiled .bbl to do some of the work for us.
+The next part is really the trick. We leverage the compiled **.bbl** (not .bib!) file to do some of the work for us.
 
 ### i. Compile the Overleaf thesis project with the merged .bib file
 
-Upload the merged .bib file (``merged2345.bib``) into your sandwich Overleaf project. [I'm assuming the Overleaf project already contains the copy-and-pasted contents of each of the papers.] Compile *the whole sandwich thesis*, with ``merged2345.bib`` as the sole .bib file being used to generate the bibliography. *Every single in-text citation should appear in the bibliography*. However, the references in common between papers should appear in the bibliography *more than once* (!!). This really is the problem we are trying to solve. Here's how it looks:
+Upload the merged .bib file (``merged2345.bib``) into your sandwich thesis Overleaf project, and set it as your bibliography, for example as follows:
 
-![Duplicate references when compiling with the merged .bib file, due to being cited in multiple papers but with differing bibkeys.](duplicates-using-merged2345.bib.jpg)
+``\bibliography{merged2345}{}``
 
-In the above bibliography, you can see there are duplicate references. These papers were cited in multiple chapters of the thesis, but using differing bibkeys. Our ``beck2019`` vs. ``beck2019-h2`` is visible at the bottom there.
+Now, compile *the whole sandwich thesis*, with ``merged2345.bib`` as the sole .bib file being used to generate the bibliography. You should see that *every single in-text citation should appear in the bibliography*. However, the references in common between papers should appear in the bibliography *more than once* (!!). This really is the problem we are trying to solve. Here's how it looks:
+
+![Duplicate references when compiling with the merged .bib file, due to being cited in multiple papers but with differing bibkeys.](./images/duplicates-using-merged2345.bib.jpg)
+
+In the above bibliography, you can see there are duplicate references. These papers were cited in multiple chapters of the thesis, but using differing bibkeys, so they are being counted more than once. Our ``beck2019`` vs. ``beck2019-h2`` example from Step 2 is visible at the bottom there.
 
 ### ii. Download the resulting .bbl file 
 
-Click the "Logs and outputs" button at the top left of the Overleaf PDF window, where the log messages are displayed about the most recent compilation. At the bottom, next to the "Clear cached files" button, click the "Other logs and files" button (you may need to scroll to reach the bottom). Download the file ``output.bbl``. Put it in your same working directory. Rename it to ``chapter2+3+4+5_output.bbl``. 
+Click the "Logs and outputs" button at the top left of the Overleaf PDF window, where the log messages are displayed about the most recent compilation. At the bottom, next to the "Clear cached files" button, click the "Other logs and files" button (you may need to scroll to reach the bottom). Download the file ``output.bbl``. Put it in your same local working directory. Rename it to ``chapter2+3+4+5_output.bbl``. 
 
 ## 4. Parse the .bbl file in python to make a mapping dictionary
 
-The format of a .bbl file is handy and we can use it to identify the duplicates by their bibkeys and DOIs. 
+The format of a .bbl file is handy and we can use it to identify the duplicates by their bibkeys and DOIs. Next, we do this using python. The python script is called ``parse_bbl.py`` in this github repository.
 
-Copy and paste the main contents of ``chapter2+3+4+5_output.bbl`` into the python file ``parse_bbl.py`` to set the ``bbl_content`` string. Here's an example:
+Copy and paste the main contents of ``chapter2+3+4+5_output.bbl`` into the python script ``parse_bbl.py`` to set the ``bbl_content`` string. Here's an example:
 
 ```python
 bbl_content = r"""
@@ -207,7 +247,13 @@ bbl_content = r"""
 """
 ```
 
-Run the ``parse_bbl.py`` script. It will look find the duplicate references based on the DOIs, and make a dictionary whose keys are the first-used bibkey for that reference, and whose values are a list of the second-, third-, fourth- etc used bibkey for that reference. That dictionary is called ``mapping_dict`` and it should be printed out. For example:
+Now, run the ``parse_bbl.py`` script. On the commandline:
+
+```bash
+python parse_bbl.py
+```
+
+The script will look through the ``bbl_content`` string to find the duplicate references based on their DOIs, and make our mapping dictionary, named ``mapping_dict``. The mapping dictionary's keys are the bibkey for each reference *the first time it appeared in the ``bbl_content`` string*, and the corresponding values are a list of the bibkeys for that reference *the second/third/fourth/etc time it appeared*. You're going to want to print the mapping dictionary out. For example:
 
 ```python
 print(mapping_dict)
@@ -223,50 +269,69 @@ print(mapping_dict)
 }
 ```
 
-So, the first time that Andrews et al. 2018 was cited in the sandwich thesis, it was done using ``\citep{2018-andrews-dsharp1}`` (say, in chapter 2) and the second time Andrews et al. 2018 was cited in the sandwich thesis, it was done using ``\citep{andrews18-dsharp1}`` (say, in chapter 3). In the case where a paper was cited across three chapters (in this example, Zhu et al. 2015), the key in ``mapping_dict`` maps to a list of two bibkeys.
+Here you can see that, the first time that Andrews et al. 2018 was cited in the sandwich thesis, it was cited using ``\citep{2018-andrews-dsharp1}`` (say, in chapter 2), and, the second time Andrews et al. 2018 was cited in the sandwich thesis, it was done using ``\citep{andrews18-dsharp1}`` (say, in chapter 3). Different bibkeys, same reference. In the case where a paper was cited across three chapters (in this example, Zhu et al. 2015), the key in ``mapping_dict`` maps to a list of *two* bibkeys.
 
-## 5. Use the mapping dictionary to rename the bibkeys in the thesis
+## 5. Use the mapping dictionary to rename the bibkeys in the sandwich thesis text
 
-Ultimately, we want to uniform-itize all the differing bibkeys in the sandwich thesis to a common bibkey. We'll do this using the ``mapping_dict`` and another python script.
+Ultimately, we want to uniformitize all the differing bibkeys in the sandwich thesis to a common bibkey. We'll do this using the ``mapping_dict`` and another python script. The python script is called ``replace_bibkeys.py`` in this github repository.
 
 ### i. Prepare to replace the bibkeys
 
-Copy and paste the ``mapping_dict`` that was printed by the ``parse_bbl.py`` script into the ``replace_bibkeys.py`` script to set the ``duplicate_bibkeys`` variable string. Next, we have a chance to edit it.
+Copy and paste the ``mapping_dict`` that was printed by the ``parse_bbl.py`` script into the ``replace_bibkeys.py`` script to set the ``duplicate_bibkeys`` variable string. The mapping dictionary is now called ``duplicate_bibkeys`` from hereon out.
+
+Next, we'll take the chance to edit it.
 
 ### ii. Decide if you like the ``mapping_dict``
 
-The ``parse_bbl.py`` script can make mistakes. It also uses the *first* instance of a paper's bibkey to serve as the "reference" or default bibkey for all subsequent bibkeys for that paper. For both these reasons, take this opportunity to edit it. For example, if we have,
+The mapping dictionary (now ``duplicate_bibkeys``) may need some tweaking before we do the final step. The ``parse_bbl.py`` script can make mistakes in identifying duplicates. But importantly, it also uses the *first* instance of a paper's bibkey to serve as the "reference" bibkey for all subsequent bibkeys for that paper. For example, if we have,
 
 ```python 
 duplicate_bibkeys = {'andrews18-dsharp1': ['2018-andrews-dsharp1'],
                      'software-astropy1': ['astropy:2013']
 }
 ```
-that means that all instances of ``\citep{astropy:2013}`` will be replaced with ``\citep{software-astropy1}``. If you actually prefer ``astropy:2013`` as the bibkey for that paper, then manually switch them around: 
+that means that in our sandwich thesis text, all instances of ``\citep{astropy:2013}`` will be replaced with ``\citep{software-astropy1}`` in the sandwich thesis text. You may simply just not want to use ``software-astropy1`` as the bibkey for some personal reason. So, take this opportunity to edit the mapping dictionary manually. If you actually prefer ``astropy:2013`` as the bibkey for that paper, then manually switch around the key and the value: 
 ```python 
 duplicate_bibkeys = {'andrews18-dsharp1': ['2018-andrews-dsharp1'],
-                     'astropy:2013': ['software-astropy1']
+'astropy:2013': ['software-astropy1']
 }
 ```
-This is your last chance, or forever hold your peace.
+
+To be totally explicit, you should understand the keys and values in the mapping dictionary like this:
+
+```python 
+duplicate_bibkeys = {'bibkey-to-keep': ['bibkey-to-be-replaced', 'another-bibkey-to-be-replaced'],
+'KEEPER': ['this-bibkey-will-be-replaced-by-KEEPER']
+}
+```
+
+Once you're happy with the mapping, move on to the last step.
 
 ### iii. The last step
 
-Create the file ``maintest.tex`` in your working directory. Paste each chapter into this file. Then run the ``replace_bibkeys.py`` script by the command line:
+Here's where we use the ``replace_bibkeys.py`` python script to find all the instances of the mapping dictionary values (i.e., ``bibkey-to-be-replaced``) in the sandwich thesis chapters text, and replace those instances with the mapping dictionary keys (i.e., ``bibkey-to-keep``), to finally unify the bibliography.
+
+First, in your local working directory, create an empty file named ``thesis-contents.tex``. 
+
+Next, copy as much text from your sandwich thesis as you want (one section of a chapter, a whole chapter, or all the chapters), and paste it into this empty ``thesis-contents.tex`` file.
+
+Now we will run the ``replace_bibkeys.py`` script by the command line. It will operate on the ``thesis-contents.tex`` file, and create a new file called ``thesis-contents_replaced.tex``. Here goes:
 
 ```bash
-python replace_bibkeys.py maintest.tex
+python replace_bibkeys.py thesis-contents.tex
 ```
 
-It will say it is replacing bibkeyA with bibkeyB, but it may not actually have done, if bibkeyA was not present in the file. 
+(Note that while the script runs, it will say it is replacing bibkeyA with bibkeyB, but it may not actually have done so if bibkeyA was not actually present in the file.) 
 
-It will create a new .text file, maintest_replaced.tex. Copy and paste the contents of that into your Overleaf.
+And that's it! Copy the contents of ``thesis-contents_replaced.tex`` and paste it all back into your sandwich thesis (and repeat as necessary if you didn't originally copy and paste the whole thesis)!
 
-Repeat as necessary for each chapter.
+When you recompile the sandwich thesis Overleaf with the new text, see how the history acts like git -- meaning, even though you may have pasted over *all* the contents of a chapter's text, Overleaf will show that only the bibkeys have been edited. 
 
-Compile the Overleaf again, and see how the history acts like git -- even though you pasted over *all* the contents of a chapter's .tex file, Overleaf will show that only the bibkeys have been edited. 
+And that's it, you've got a single sandwich thesis bibliography with no duplicates.
 
-And that's it, you're done!
+### Aftermath
+
+* The ``merged2345.bib`` file remains in your Overleaf as your single sandwich thesis .bib file. Of course, it still contains the "old" bibkeys (e.g. ``bibkey-to-be-replaced``). If you go forward writing new text in the thesis Introduction and start typing the command ``\citep{the-beginning-of-a-ref``}, the Overleaf dropdown may suggest old bibkeys to you! So just remember that.
 
 
 
